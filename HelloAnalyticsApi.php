@@ -41,19 +41,100 @@ if (!$client->getAccessToken()) {
 }
 
 function runMainDemo(&$analytics) {
-  try {
+	try {
 
-    // Step 2. Get the user's first profile ID.
-    $profileId = getFirstProfileId($analytics);
+	// Step 2. Get the user's first profile ID.
+	$profileId = "36423428";
 
-    if (isset($profileId)) {
+	if (isset($profileId)) {
+		$dia = date('d') - 1;
+		$mes = date('m');
+		$ano = date('Y');
+		$data = mktime(0,0,0,$mes,$dia,$ano);
+		$data = date('Y/m/d',$data);
+		$data = str_replace("/","-",$data);
+		$report_date = substr($data,-2,2);
 
-      // Step 3. Query the Core Reporting API.
-      $results = getResults($analytics, $profileId);
+		//Relatorio de Paginas
+		$report_name = "paginas";
+		$optParams = array(
+			'dimensions' => 'ga:pagePath',
+			'sort' => '-ga:pageviews',
+			'max-results' => '25');
+		$metrics = 'ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews';
 
-      // Step 4. Output the results.
-      printResults($results);
-    }
+		// Step 3. Query the Core Reporting API.
+		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
+
+		// Step 4. Output the results.
+		printResults($results, $report_name, $report_date);
+		//Fim - Relatorio de Paginas
+
+		//Relatorio de Campanhas
+		$report_name = "campanhas";
+		$optParams = array(
+			'dimensions' => 'ga:date,ga:campaign,ga:source,ga:medium',
+			'sort' => '-ga:visits',
+			'max-results' => '25');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:goal1Completions';
+
+		// Step 3. Query the Core Reporting API.
+		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
+
+		// Step 4. Output the results.
+		printResults($results, $report_name, $report_date);
+		//Fim - Relatorio de Campanhas
+
+		//Relatorio de Trafego de Origem
+		$report_name = "trafego-de-origem";
+		$optParams = array(
+			'dimensions' => 'ga:date,ga:source,ga:medium',
+			'sort' => '-ga:visits',
+			'max-results' => '25');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:goal1Completions';
+
+		// Step 3. Query the Core Reporting API.
+		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
+
+		// Step 4. Output the results.
+		printResults($results, $report_name, $report_date);
+		//Fim - Trafego de Origem
+
+		//Relatorio de Eventos (Maximo de 7 dimensões)
+		/*
+		$report_name = "trafego-de-origem";
+		$optParams = array(
+			'dimensions' => 'ga:date,ga:campaign,ga:source,ga:medium,ga:pagePath,ga:pageTitle,ga:eventCategory,ga:eventAction,ga:eventLabel,ga:adMatchedQuery',
+			'sort' => '-ga:totalEvents',
+			'max-results' => '25');
+		$metrics = 'ga:totalEvents,ga:visits,ga:visitors,ga:pageviews';
+
+		// Step 3. Query the Core Reporting API.
+		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
+
+		// Step 4. Output the results.
+		printResults($results, $report_name, $report_date);
+		*/
+		//Fim - Eventos
+
+		//Relatorio de Palavras-Chave
+		/*Problema com as tres ultimas metricas
+		$report_name = "palavras-chave";
+		$optParams = array(
+			'dimensions' => 'ga:keyword',
+			'sort' => '-ga:visits',
+			'max-results' => '25');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:goal1Completions,ga:adClicks,ga:impressions,ga:adCost';
+
+		// Step 3. Query the Core Reporting API.
+		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
+
+		// Step 4. Output the results.
+		printResults($results, $report_name, $report_date);
+		*/
+		//Fim - Palavras-Chave
+
+	}
 
   } catch (apiServiceException $e) {
     // Error from the API.
@@ -96,36 +177,34 @@ function getFirstprofileId(&$analytics) {
   }
 }
 
-function getResults(&$analytics, $profileId) {
-	$optParams = array(
-			'dimensions' => 'ga:source,ga:keyword',
-			'sort' => '-ga:visits,ga:keyword',
-			'filters' => 'ga:medium==organic',
-			'max-results' => '25');
-   return $analytics->data_ga->get(
-       'ga:' . $profileId,
-       '2012-09-01',
-       '2012-09-30',
-       'ga:visits,ga:pageviews',
-	   $optParams);
+function getResults(&$analytics, $profileId, $metrics, $optParams, $data) {
+
+	return $analytics->data_ga->get(
+		'ga:' . $profileId,
+		$data,
+		$data,
+		$metrics,
+		$optParams);
+
 }
 
-function printResults(&$results) {
-  if (count($results->getRows()) > 0) {
-    $profileName = $results->getProfileInfo()->getProfileName();
-    $rows = $results->getRows();
-	echo imprimir_valores($results);
-	echo imprimir_valores_csv($results);
-//    $visits = $rows[0][0];
+function printResults(&$results, $report_name, $report_date) {
+	if (count($results->getRows()) > 0) {
+		$profileName = $results->getProfileInfo()->getProfileName();
+		$rows = $results->getRows();
+		echo imprimir_valores($results, $report_name, $report_date);
+		echo imprimir_valores_csv($results, $report_name, $report_date);
+	//    $visits = $rows[0][0];
 
-//    print "<p>First profile found: $profileName</p>";
-//    print "<p>Total visits: $visits</p>";
-  } else {
-    print '<p>No results found.</p>';
-  }
+	//    print "<p>First profile found: $profileName</p>";
+	//    print "<p>Total visits: $visits</p>";
+		echo "<br /> <hr></hr>";
+	} else {
+		print '<p>No results found.</p>';
+	}
 }
 
- function imprimir_valores($results) {
+ function imprimir_valores($results, $report_name, $report_date) {
     $table = '<h3>Rows Of Data</h3>';
 
     if (count($results->getRows()) > 0) {
@@ -158,7 +237,7 @@ function printResults(&$results) {
     return $table;
  }
 
- function imprimir_valores_csv($results) {
+ function imprimir_valores_csv($results, $report_name, $report_date) {
     $table = '';
 
     if (count($results->getRows()) > 0) {
@@ -189,18 +268,18 @@ function printResults(&$results) {
 	
 
 	// Abre ou cria o arquivo bloco1.txt
-	$fp = fopen("teste_csv.csv", "w");
+	$fp = fopen("reports_ga_fiat_".$report_name."_".$report_date.".csv", "w");
 
 	fwrite($fp, $table);
 
 	fclose($fp);
 
-	sobe_no_ftp();
+	sobe_no_ftp($report_name,$report_date);
 	
     return $table;
  }
  
-function sobe_no_ftp(){ 
+function sobe_no_ftp($report_name,$report_date){ 
 
 	// Dados do servidor
 	$servidor = 'ftpmulti.aunica.com'; // Endereço
@@ -214,9 +293,9 @@ function sobe_no_ftp(){
 	$login = ftp_login($ftp, $usuario, $senha); // Retorno: true ou false
 
 	// Define variáveis para o envio de arquivo
-	$local_arquivo = 'teste_csv.csv'; // Localização (local)
+	$local_arquivo = "reports_ga_fiat_".$report_name."_".$report_date.".csv"; // Localização (local)
 	$ftp_pasta = '/fiat/'; // Pasta (externa)
-	$ftp_arquivo = 'teste_csv.csv'; // Nome do arquivo (externo)
+	$ftp_arquivo = "reports_ga_fiat_".$report_name."_".$report_date.".csv"; // Nome do arquivo (externo)
 
 	// Envia o arquivo pelo FTP em modo ASCII
 	$envia = ftp_put($ftp, $ftp_pasta.$ftp_arquivo, $local_arquivo, FTP_BINARY); // Retorno: true / false
