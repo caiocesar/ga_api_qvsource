@@ -53,15 +53,15 @@ function runMainDemo(&$analytics) {
 		$data = mktime(0,0,0,$mes,$dia,$ano);
 		$data = date('Y/m/d',$data);
 		$data = str_replace("/","-",$data);
-		$report_date = substr($data,-2,2);
+		$report_date = str_replace("-","",$data);
 
 		//Relatorio de Paginas
 		$report_name = "paginas";
 		$optParams = array(
-			'dimensions' => 'ga:pagePath',
+			'dimensions' => 'ga:date,ga:pagePath',
 			'sort' => '-ga:pageviews',
-			'max-results' => '25');
-		$metrics = 'ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews';
+			'max-results' => '100');
+		$metrics = 'ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews,ga:uniquePageviews';
 
 		// Step 3. Query the Core Reporting API.
 		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
@@ -73,10 +73,10 @@ function runMainDemo(&$analytics) {
 		//Relatorio de Campanhas
 		$report_name = "campanhas";
 		$optParams = array(
-			'dimensions' => 'ga:date,ga:campaign,ga:source,ga:medium',
+			'dimensions' => 'ga:date,ga:campaign,ga:source,ga:medium,ga:pagePath',
 			'sort' => '-ga:visits',
-			'max-results' => '25');
-		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:goal1Completions';
+			'max-results' => '100');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:uniquePageviews';
 
 		// Step 3. Query the Core Reporting API.
 		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
@@ -88,10 +88,10 @@ function runMainDemo(&$analytics) {
 		//Relatorio de Trafego de Origem
 		$report_name = "trafego-de-origem";
 		$optParams = array(
-			'dimensions' => 'ga:date,ga:source,ga:medium',
+			'dimensions' => 'ga:date,ga:source,ga:medium,ga:pagePath',
 			'sort' => '-ga:visits',
-			'max-results' => '25');
-		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:goal1Completions';
+			'max-results' => '100');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:timeOnPage,ga:percentNewVisits,ga:visitBounceRate,ga:uniquePageviews';
 
 		// Step 3. Query the Core Reporting API.
 		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
@@ -101,38 +101,59 @@ function runMainDemo(&$analytics) {
 		//Fim - Trafego de Origem
 
 		//Relatorio de Eventos (Maximo de 7 dimensões)
-		/*
-		$report_name = "trafego-de-origem";
+		
+		$report_name = "eventos";
 		$optParams = array(
-			'dimensions' => 'ga:date,ga:campaign,ga:source,ga:medium,ga:pagePath,ga:pageTitle,ga:eventCategory,ga:eventAction,ga:eventLabel,ga:adMatchedQuery',
-			'sort' => '-ga:totalEvents',
-			'max-results' => '25');
-		$metrics = 'ga:totalEvents,ga:visits,ga:visitors,ga:pageviews';
+			'dimensions' => 'ga:date,ga:source,ga:medium,ga:keyword,ga:eventLabel,ga:pageTitle',
+			'sort' => '-ga:visits',
+			'max-results' => '100');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:totalEvents';
 
 		// Step 3. Query the Core Reporting API.
 		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
 
 		// Step 4. Output the results.
 		printResults($results, $report_name, $report_date);
-		*/
+		
 		//Fim - Eventos
 
 		//Relatorio de Palavras-Chave
-		/*Problema com as tres ultimas metricas
+		
 		$report_name = "palavras-chave";
 		$optParams = array(
-			'dimensions' => 'ga:keyword',
+			'dimensions' => 'ga:date,ga:keyword,ga:pagePath',
 			'sort' => '-ga:visits',
-			'max-results' => '25');
-		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:goal1Completions,ga:adClicks,ga:impressions,ga:adCost';
+			'max-results' => '100');
+		$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:uniquePageviews';
 
 		// Step 3. Query the Core Reporting API.
 		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
 
 		// Step 4. Output the results.
 		printResults($results, $report_name, $report_date);
-		*/
+		
 		//Fim - Palavras-Chave
+
+		/*
+		//Relatorio de Palavras-Chave-AdWords
+		
+		$report_name = "palavras-chave-adwords";
+		$optParams = array(
+			'dimensions' => 'ga:date,ga:keyword',
+			'sort' => '-ga:visits',
+			'filters' => 'ga:medium==cpc',
+			'max-results' => '25');
+		$metrics = 'ga:visits,ga:adClicks,ga:impressions,ga:adCost';
+		//$metrics = 'ga:visits,ga:visitors,ga:pageviews,ga:percentNewVisits,ga:visitBounceRate,ga:uniquePageviews,ga:adClicks,ga:impressions,ga:adCost';
+
+		// Step 3. Query the Core Reporting API.
+		$results = getResults($analytics, $profileId, $metrics, $optParams, $data);
+
+		// Step 4. Output the results.
+		printResults($results, $report_name, $report_date);
+		
+		//Fim - Palavras-Chave-AdWords
+		*/
 
 	}
 
